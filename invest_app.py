@@ -26,12 +26,34 @@ stock_df = gse_api_func()
 stock_names = stock_df.name.tolist()
 
 
-# Import historical stock price data
-file_path_list = ['C:\\Users\\fohask1\\Desktop\\Learning\\Web_development\\gse_app\\Prices\\GSE\\{}'.format(stock_name) for stock_name in stock_names if stock_name not in ['DASPHARMA']]
-glob_path_list = [glob('{}\\*csv'.format(file_path)) for file_path in file_path_list]
-all_data_paths = [path for path_list in glob_path_list for path in path_list]
-stock_price_df_list = [pd.read_csv(path, parse_dates=['Date']) for path in all_data_paths]
-stock_price_df = pd.concat(stock_price_df_list, axis=0)
+# =============================================================================
+# # Import historical stock price data
+# def import_hist_data():
+#     file_path_list = ['C:\\Users\\fohask1\\Desktop\\Learning\\Web_development\\gse_app\\Prices\\GSE\\{}'.format(stock_name) for stock_name in stock_names if stock_name not in ['DASPHARMA']]
+#     glob_path_list = [glob('{}\\*csv'.format(file_path)) for file_path in file_path_list]
+#     all_data_paths = [path for path_list in glob_path_list for path in path_list]
+#     stock_price_df_list = [pd.read_csv(path, parse_dates=['Date']) for path in all_data_paths]
+#     stock_price_hist = pd.concat(stock_price_df_list, axis=0)
+#     return stock_price_hist.iloc[:, :5]
+# 
+# stock_price_df_hist = import_hist_data()
+# 
+# # Import 2020 Stock price information
+# def import_2020_data():
+#     file_path_2020 = glob('C:\\Users\\fohask1\\Desktop\\Learning\\Web_development\\gse_app\\Prices\\GSE\\Current\\GSE 2020 (Jan - April)\\*csv')
+#     df_2020 = [pd.read_csv(file_path, parse_dates=['Date']) for file_path in file_path_2020]
+#     merged_df = pd.concat(df_2020, axis=0)
+#     return merged_df
+# 
+# stock_price_df_2020 = import_2020_data()
+# 
+# # Full stock prices dataset
+# stock_price_df = pd.concat([stock_price_df_hist, stock_price_df_2020], axis=0)
+# 
+# =============================================================================
+
+# Import historical stock prices
+stock_price_df = pd.read_csv('C:\\Users\\fohask1\\Desktop\\Learning\\Web_development\\gse_app\\Financials\\Stock_Prices_Update.csv', parse_dates=['Date'])
 
 # Convert price to float 
 stock_price_df['Closing Price VWAP (GHS)'] = pd.to_numeric(stock_price_df['Closing Price VWAP (GHS)'], errors='coerce')
@@ -77,7 +99,7 @@ industry_share_dict = dict(zip(company_share_codes[1:], industry_share))
 def stock_share_func(df, ticker):
     stock_df = df.loc[df['Share Code']==ticker]
     stock_inception_date = stock_df['Date'].min()
-    stock_inception_price = stock_df[['Closing Price VWAP (GHS)']][stock_df['Date']==stock_inception_date].at[0,'Closing Price VWAP (GHS)']
+    stock_inception_price = stock_df[['Closing Price VWAP (GHS)']][stock_df['Date']==stock_inception_date].iat[0, 0]
     stock_inception_shares = 10000 / stock_inception_price
     return stock_inception_shares
 
