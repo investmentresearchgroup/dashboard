@@ -30,6 +30,13 @@ interest_key_name = ['Financial, Interest Rates, Government Securities, Governme
                      'Financial, Interest Rates, Savings Rate, Percent per annum',
                      'Prices, Consumer Price Index, All items, Percentage change, Previous period, Percent']
 
+inflation_key = ['CompactData/IFS/M.GH.PCPI_PC_CP_A_PT', 'CompactData/IFS/M.GH.PCPI_PC_PP_PT']#, 'CompactData/IFS/M.GH.PCPI_IX', 'CompactData/IFS/M.GH.PPPI_IX']
+
+inflation_key_name = ['Prices, Consumer Price Index, All items, Percentage change, Corresponding period previous year, Percent',
+                      'Prices, Consumer Price Index, All items, Percentage change, Previous period, Percent']
+#                      'Prices, Consumer Price Index, All items, Index',
+#                      'Prices, Producer Price Index, All Commodities, Index']
+
 # Exchange rate
 exchange_rate_key = ['CompactData/IFS/M.GH.EDNA_USD_XDC_RATE', 'CompactData/IFS/M.GH.EECUNE_XEU_XDC_RATE', 'CompactData/IFS/M.GH.EENA_EUR_XDC_RATE', 
                      'CompactData/IFS/M.GH.EENE_EUR_XDC_RATE', 'CompactData/IFS/M.GH.ENDA_XDC_USD_RATE', 'CompactData/IFS/M.GH.ENDE_XDC_USD_RATE', 
@@ -50,33 +57,31 @@ exchange_rate_key_name = ['Exchange Rates, Domestic Currency per ECU, Period Ave
 # Navigate to series in API-returned JSON data
 interest_data = [pd.DataFrame(requests.get(f'{url}{key}').json()['CompactData']['DataSet']['Series']['Obs']) for key in interest_key]
 
-exchange_rate_data = [pd.DataFrame(requests.get(f'{url}{key}').json()['CompactData']['DataSet']['Series']['Obs']).iloc[:, :2] for key in exchange_rate_key]
+inflation_data = [pd.DataFrame(requests.get(f'{url}{key}').json()['CompactData']['DataSet']['Series']['Obs']).iloc[:, [0, 1]] for key in inflation_key]
+
+exchange_rate_data = [pd.DataFrame(requests.get(f'{url}{key}').json()['CompactData']['DataSet']['Series']['Obs']).iloc[:, [0,1]] for key in exchange_rate_key]
 
 #cpi_df = pd.DataFrame(data)
-def int_data_func(int_df):
-    int_df.columns = ['Date', 'Rate']
-    int_df['Date'] = pd.to_datetime(int_df['Date'])
-    int_df['Rate'] = pd.to_numeric(int_df['Rate'])
-    int_df_plot = int_df.set_index('Date')
-    return int_df_plot.reset_index()
+def data_func(data_df):
+    data_df.columns = ['Date', 'Rate']
+    data_df['Date'] = pd.to_datetime(data_df['Date'])
+    data_df['Rate'] = pd.to_numeric(data_df['Rate'])
+    return data_df
 #int_df_plot_abg = cpi_df_plot.iloc[-16:, :]
 #int_df_plot.plot.line()
 
-def xcr_data_func(xcr_df):
-#    xcr_df = pd.DataFrame(data)
-    xcr_df.columns = ['Date', 'Rate']
-    xcr_df['Date'] = pd.to_datetime(xcr_df['Date'])
-    xcr_df['Rate'] = pd.to_numeric(xcr_df['Rate'])
-    xcr_df_plot = xcr_df.set_index('Date')
-    return xcr_df_plot.reset_index()
 
 #xcr_df_plot.plot.line()
-interest_data_list = [int_data_func(df) for df in interest_data]
+interest_data_list = [data_func(df) for df in interest_data]
 
-exchange_rate_data_list = [xcr_data_func(df) for df in exchange_rate_data]
+inflation_data_list = [data_func(df) for df in inflation_data]
+
+exchange_rate_data_list = [data_func(df) for df in exchange_rate_data]
 
 # Dictionaries
 interest_data_dict = dict(zip(interest_key_name, interest_data_list))
+
+inflation_rate_dict = dict(zip(inflation_key_name, inflation_data_list))
 
 exchange_rate_dict = dict(zip(exchange_rate_key_name, exchange_rate_data_list))
 
@@ -160,6 +165,31 @@ app.layout = html.Div([
                 dbc.CardBody(
                     [
                     dbc.CardHeader(
+                        html.H4('Inflation rates')
+                    ),
+                    dbc.CardBody(
+                        [
+                        dcc.Dropdown(
+                            id='inflation_type',
+                            options=[{'label': i, 'value': i} for i in inflation_key_name],
+                            value='Prices, Consumer Price Index, All items, Percentage change, Corresponding period previous year, Percent'
+                        ),
+                        dcc.Graph(
+                        id='inflation_graph'        
+                        )
+                    ])
+                ])
+            ),
+        width=8),
+        dbc.Col(width=2)
+    ]),
+    dbc.Row([
+        dbc.Col(width=2),
+        dbc.Col(
+            dbc.Card(
+                dbc.CardBody(
+                    [
+                    dbc.CardHeader(
                         html.H4('Exchange rates')
                     ),
                     dbc.CardBody(
@@ -189,6 +219,17 @@ def interest_graph(interest_type):
     interest_df = interest_data_dict[interest_type]
     fig = px.line(interest_df, x="Date", y="Rate", template='simple_white')
     return fig
+
+
+@app.callback(
+    Output('inflation_graph', 'figure'),
+    [Input('inflation_type', 'value')]
+)
+def inflation_graph(inflation_type):
+    inflation_df = inflation_rate_dict[inflation_type]
+    fig = px.line(inflation_df, x="Date", y="Rate", template='simple_white')
+    return fig
+
 
 
 @app.callback(
