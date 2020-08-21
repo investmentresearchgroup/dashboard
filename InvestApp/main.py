@@ -4,11 +4,11 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 
 
-from app import app
+from app import app, server
 from sidebar import sidebar
 from pages import(
     overview, ticker_analysis,
-    page3
+    page3,  # econ_app
 )
 
 
@@ -34,6 +34,8 @@ def render_page_content(pathname):
     elif pathname == "/page-2":
         return ticker_analysis.layout
     elif pathname == "/page-3":
+        return page3.layout  # econ_app.layout
+    elif pathname == "/page-4":
         return page3.layout
     return dbc.Jumbotron(
         [
@@ -45,4 +47,4 @@ def render_page_content(pathname):
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True, port=4000)
+    app.run_server(debug=True, port=4020)

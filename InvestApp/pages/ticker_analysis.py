@@ -194,7 +194,7 @@ layout = html.Div([
                     ]
                 )
             ),
-            width=8),
+        ),
     ]),
     dbc.Row([
         dbc.Col([
@@ -230,7 +230,7 @@ layout = html.Div([
                     )
                 )
             )],
-            width=3),
+        ),
         dbc.Col(
             dbc.Card(
                 dbc.CardBody([
@@ -280,7 +280,7 @@ layout = html.Div([
                         )
                     )
                 ]),
-            ), width=5
+            ), width=8
         ),
     ])
 ])
@@ -313,13 +313,22 @@ def fig_func(n_clicks, ticker_name):
     industry_share_df = industry_share_dict[ticker_name]
     pie_fig = px.pie(industry_share_df, values='Capitalization', names='Name')
 
+    pie_fig.update_layout(legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    ))
+
     stock_df = stock_price_df.loc[stock_price_df['Share Code'] == ticker_name].copy(
     )
     stock_df['Share Volume'] = ticker_share_dict[ticker_name]
     stock_df['Investment Value'] = stock_df['Closing Price VWAP (GHS)'] * \
         stock_df['Share Volume']
-    fig = px.line(stock_df, x="Date", y="Investment Value",
-                  template='simple_white')
+    fig = px.line(stock_df.sort_values(
+        by='Date'), x="Date", y="Investment Value",
+        template='simple_white')
     fig.update_layout(
         margin=dict(l=5, r=5, t=5, b=5)
     )
